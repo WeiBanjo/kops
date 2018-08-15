@@ -26,13 +26,15 @@ CACHE_DIR_CONTAINER="${ROOTFS_DIR}${CACHE_DIR_HOST}"
 # AWS Instance Types to Nvidia Card Mapping (cut and pasted from AWS docs)
 # Load the correct driver for the correct instance type
 #   Instances  Product Type  Product Series  Product
-#   G2         GRID          GRID Series     GRID K520   <-- I think they meant G3
+#   G2         GRID          GRID Series     GRID K520
+#   G3         Tesla         M-Series        M60
 #   P2         Tesla         K-Series        K-80
 #   P3         Tesla         V-Series        V100
 # Both P2 and P3 are set for Cuda Toolkit 9.1
 # http://www.nvidia.com/Download/index.aspx
 declare -A class_to_driver_file
 class_to_driver_file=( \
+    ["g2"]="http://us.download.nvidia.com/XFree86/Linux-x86_64/367.128/NVIDIA-Linux-x86_64-367.128.run" \
     ["g3"]="http://us.download.nvidia.com/XFree86/Linux-x86_64/367.124/NVIDIA-Linux-x86_64-367.124.run" \
     ["g3s"]="http://us.download.nvidia.com/tesla/390.46/NVIDIA-Linux-x86_64-390.46.run" \
     ["p2"]="http://us.download.nvidia.com/tesla/390.46/NVIDIA-Linux-x86_64-390.46.run" \
@@ -40,6 +42,7 @@ class_to_driver_file=( \
 )
 declare -A class_to_driver_checksum
 class_to_driver_checksum=( \
+    ["g2"]="5ca1f26340af82423cb221697545643eb2572399" \
     ["g3"]="77f37939efeea4b6505842bed50445971992e303" \
     ["g3s"]="57569ecb6f6d839ecc77fa10a2c573cc069990cc" \
     ["p2"]="57569ecb6f6d839ecc77fa10a2c573cc069990cc" \

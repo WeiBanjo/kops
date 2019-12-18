@@ -116,7 +116,7 @@ if [[ ! -f ${ROOTFS_DIR}/usr/bin/gcc-7 ]]; then
   # Install gcc-7
   chroot ${ROOTFS_DIR} apt-get update
   chroot ${ROOTFS_DIR} /bin/bash -c 'apt-get -y install linux-headers-$(uname -r)'
-  chroot ${ROOTFS_DIR} /bin/bash -c 'DEBIAN_FRONTEND=noninteractive apt-get -t buster --no-upgrade -y install gcc-7'
+  chroot ${ROOTFS_DIR} /bin/bash -c 'DEBIAN_FRONTEND=noninteractive apt-get -t buster --no-upgrade -y install gcc-7 --allow-unauthenticated'
 
   # Remove the debian "buster" repo line that was added above
   sed -n '/buster/q;p' -i ${ROOTFS_DIR}/etc/apt/sources.list

@@ -29,6 +29,7 @@ CACHE_DIR=/nvidia-device-plugin
 #   G2         GRID          GRID Series     GRID K520 (deprecated)
 #   G3         Tesla         M-Series        M-60
 #   G3S        Tesla         M-Series        M-60
+#   G4         Tesla         T-Series        T-4
 #   P2         Tesla         K-Series        K-80
 #   P3         Tesla         V-Series        V100
 # http://www.nvidia.com/Download/index.aspx
@@ -37,6 +38,7 @@ class_to_driver_file=( \
     ["g2"]="http://us.download.nvidia.com/XFree86/Linux-x86_64/367.124/NVIDIA-Linux-x86_64-367.124.run" \
     ["g3"]="http://us.download.nvidia.com/tesla/390.46/NVIDIA-Linux-x86_64-390.46.run" \
     ["g3s"]="http://us.download.nvidia.com/tesla/390.46/NVIDIA-Linux-x86_64-390.46.run" \
+    ["g4dn"]="http://us.download.nvidia.com/tesla/418.87/NVIDIA-Linux-x86_64-418.87.00.run" \
     ["p2"]="http://us.download.nvidia.com/tesla/390.46/NVIDIA-Linux-x86_64-390.46.run" \
     ["p3"]="http://us.download.nvidia.com/tesla/390.46/NVIDIA-Linux-x86_64-390.46.run" \
 )
@@ -45,6 +47,7 @@ class_to_driver_checksum=( \
     ["g2"]="77f37939efeea4b6505842bed50445971992e303" \
     ["g3"]="57569ecb6f6d839ecc77fa10a2c573cc069990cc" \
     ["g3s"]="57569ecb6f6d839ecc77fa10a2c573cc069990cc" \
+    ["g4dn"]="cad87a17529667e996352c1357141040bf68b8cf" \
     ["p2"]="57569ecb6f6d839ecc77fa10a2c573cc069990cc" \
     ["p3"]="57569ecb6f6d839ecc77fa10a2c573cc069990cc" \
 )
@@ -123,29 +126,28 @@ checksums=(${class_to_driver_checksum[$AWS_INSTANCE_CLASS]} ${cuda_files_checksu
 length=${#downloads[@]}
 for (( i=0; i<${length}; i++ )); do
   download=${downloads[$i]}
+  checksum=${checksums[$i]}
   filename=$(basename $download)
+  filepath="${CACHE_DIR}/${filename}"
   filepath_installed="${CACHE_DIR}/${filename}.installed"
+
+  echo "Checking for file at $filepath"
+  if [[ ! -f $filepath ]] || ! (echo "$checksum  $filepath" | sha1sum -c - 2>&1 >/dev/null); then
+    echo "Downloading $download"
+    curl -L $download > $filepath
+    chmod a+x $filepath
+  fi
+
+  echo "Verifying sha1sum of file at $filepath"
+  if ! (echo "$checksum  $filepath" | sha1sum -c -); then
+    echo "Failed to verify sha1sum for file at $filepath"
+    exit 1
+  fi
 
   # Install the Nvidia driver and cuda libs
   if [[ -f $filepath_installed ]]; then
     echo "Detected prior install of file $filename on host"
   else
-    checksum=${checksums[$i]}
-    filepath="${CACHE_DIR}/${filename}"
-
-    echo "Checking for file at $filepath"
-    if [[ ! -f $filepath ]] || ! (echo "$checksum  $filepath" | sha1sum -c - 2>&1 >/dev/null); then
-      echo "Downloading $download"
-      curl -L $download > $filepath
-      chmod a+x $filepath
-    fi
-
-    echo "Verifying sha1sum of file at $filepath"
-    if ! (echo "$checksum  $filepath" | sha1sum -c -); then
-      echo "Failed to verify sha1sum for file at $filepath"
-      exit 1
-    fi
-
     echo "Installing file $filename on host"
     if [[ $download =~ .*NVIDIA.* ]]; then
       # Install the nvidia package
